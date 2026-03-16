@@ -4,10 +4,14 @@ export type MonthlyMetric = {
   revenue: number;
   signups: number;
   churnRate: number;
+  churned: number;
   activeUsers: number;
   free: number;
   pro: number;
   enterprise: number;
+  arpu: number;
+  netNewUsers: number;
+  conversionRate: number;
 };
 
 export type TierKey = "free" | "pro" | "enterprise";
@@ -20,140 +24,78 @@ export const TIER_COLORS: Record<TierKey, string> = {
 
 export const TIERS: TierKey[] = ["free", "pro", "enterprise"];
 
-export const monthlyData: MonthlyMetric[] = [
-  {
-    month: "2025-04",
-    label: "Apr 2025",
-    revenue: 42500,
-    signups: 320,
-    churnRate: 4.8,
-    activeUsers: 2150,
-    free: 1280,
-    pro: 645,
-    enterprise: 225,
-  },
-  {
-    month: "2025-05",
-    label: "May 2025",
-    revenue: 46200,
-    signups: 385,
-    churnRate: 4.5,
-    activeUsers: 2380,
-    free: 1390,
-    pro: 720,
-    enterprise: 270,
-  },
-  {
-    month: "2025-06",
-    label: "Jun 2025",
-    revenue: 48900,
-    signups: 410,
-    churnRate: 4.2,
-    activeUsers: 2590,
-    free: 1480,
-    pro: 805,
-    enterprise: 305,
-  },
-  {
-    month: "2025-07",
-    label: "Jul 2025",
-    revenue: 51300,
-    signups: 375,
-    churnRate: 3.9,
-    activeUsers: 2740,
-    free: 1520,
-    pro: 870,
-    enterprise: 350,
-  },
-  {
-    month: "2025-08",
-    label: "Aug 2025",
-    revenue: 54800,
-    signups: 445,
-    churnRate: 3.7,
-    activeUsers: 2950,
-    free: 1590,
-    pro: 960,
-    enterprise: 400,
-  },
-  {
-    month: "2025-09",
-    label: "Sep 2025",
-    revenue: 58100,
-    signups: 490,
-    churnRate: 3.5,
-    activeUsers: 3180,
-    free: 1680,
-    pro: 1050,
-    enterprise: 450,
-  },
-  {
-    month: "2025-10",
-    label: "Oct 2025",
-    revenue: 62400,
-    signups: 530,
-    churnRate: 3.3,
-    activeUsers: 3440,
-    free: 1750,
-    pro: 1180,
-    enterprise: 510,
-  },
-  {
-    month: "2025-11",
-    label: "Nov 2025",
-    revenue: 67200,
-    signups: 580,
-    churnRate: 3.1,
-    activeUsers: 3720,
-    free: 1840,
-    pro: 1310,
-    enterprise: 570,
-  },
-  {
-    month: "2025-12",
-    label: "Dec 2025",
-    revenue: 71500,
-    signups: 520,
-    churnRate: 3.4,
-    activeUsers: 3910,
-    free: 1890,
-    pro: 1400,
-    enterprise: 620,
-  },
-  {
-    month: "2026-01",
-    label: "Jan 2026",
-    revenue: 76800,
-    signups: 615,
-    churnRate: 2.9,
-    activeUsers: 4220,
-    free: 1960,
-    pro: 1520,
-    enterprise: 740,
-  },
-  {
-    month: "2026-02",
-    label: "Feb 2026",
-    revenue: 82100,
-    signups: 670,
-    churnRate: 2.7,
-    activeUsers: 4560,
-    free: 2050,
-    pro: 1650,
-    enterprise: 860,
-  },
-  {
-    month: "2026-03",
-    label: "Mar 2026",
-    revenue: 88400,
-    signups: 720,
-    churnRate: 2.5,
-    activeUsers: 4920,
-    free: 2130,
-    pro: 1790,
-    enterprise: 1000,
-  },
+const PRO_PRICE = 29;
+const ENTERPRISE_PRICE = 99;
+
+const MONTH_LABELS = [
+  "Apr 2025", "May 2025", "Jun 2025", "Jul 2025",
+  "Aug 2025", "Sep 2025", "Oct 2025", "Nov 2025",
+  "Dec 2025", "Jan 2026", "Feb 2026", "Mar 2026",
 ];
+
+const MONTH_KEYS = [
+  "2025-04", "2025-05", "2025-06", "2025-07",
+  "2025-08", "2025-09", "2025-10", "2025-11",
+  "2025-12", "2026-01", "2026-02", "2026-03",
+];
+
+const SEED_SIGNUPS = [320, 385, 410, 375, 445, 490, 530, 580, 520, 615, 670, 720];
+const SEED_CHURN_RATES = [4.8, 4.5, 4.2, 3.9, 3.7, 3.5, 3.3, 3.1, 3.4, 2.9, 2.7, 2.5];
+
+const SEED_FREE_RATIO =      [0.595, 0.585, 0.572, 0.555, 0.540, 0.528, 0.508, 0.495, 0.483, 0.464, 0.450, 0.433];
+const SEED_PRO_RATIO =        [0.300, 0.302, 0.310, 0.318, 0.325, 0.330, 0.343, 0.352, 0.358, 0.360, 0.362, 0.364];
+
+function generateData(): MonthlyMetric[] {
+  const data: MonthlyMetric[] = [];
+
+  let activeUsers = 2150;
+  let free = 1280;
+  let pro = 645;
+  let enterprise = 225;
+
+  for (let i = 0; i < 12; i++) {
+    const signups = SEED_SIGNUPS[i];
+    const churnRate = SEED_CHURN_RATES[i];
+    const churned = i === 0 ? 0 : Math.round(data[i - 1].activeUsers * (churnRate / 100));
+
+    if (i > 0) {
+      activeUsers = data[i - 1].activeUsers + signups - churned;
+    }
+
+    const freeRatio = SEED_FREE_RATIO[i];
+    const proRatio = SEED_PRO_RATIO[i];
+    const entRatio = 1 - freeRatio - proRatio;
+
+    free = Math.round(activeUsers * freeRatio);
+    pro = Math.round(activeUsers * proRatio);
+    enterprise = activeUsers - free - pro;
+
+    const revenue = (pro * PRO_PRICE) + (enterprise * ENTERPRISE_PRICE);
+    const arpu = Math.round((revenue / activeUsers) * 100) / 100;
+    const netNewUsers = signups - churned;
+    const conversionRate = Math.round(((pro + enterprise) / activeUsers) * 1000) / 10;
+
+    data.push({
+      month: MONTH_KEYS[i],
+      label: MONTH_LABELS[i],
+      revenue,
+      signups,
+      churnRate,
+      churned,
+      activeUsers,
+      free,
+      pro,
+      enterprise,
+      arpu,
+      netNewUsers,
+      conversionRate,
+    });
+  }
+
+  return data;
+}
+
+export const monthlyData: MonthlyMetric[] = generateData();
 
 export function getFilteredData(
   data: MonthlyMetric[],
@@ -165,32 +107,41 @@ export function getFilteredData(
     .filter((d) => d.month >= startMonth && d.month <= endMonth)
     .map((d) => {
       if (tiers.length === 3) return d;
-      const filteredRevenue = tiers.reduce((sum, tier) => {
-        const tierUsers = d[tier];
-        const totalPaidUsers = d.pro + d.enterprise;
-        if (tier === "free") return sum;
-        return sum + (d.revenue * tierUsers) / (totalPaidUsers || 1);
-      }, 0);
+      const filteredPro = tiers.includes("pro") ? d.pro : 0;
+      const filteredEnt = tiers.includes("enterprise") ? d.enterprise : 0;
+      const filteredRevenue = (filteredPro * PRO_PRICE) + (filteredEnt * ENTERPRISE_PRICE);
       return {
         ...d,
-        revenue: tiers.includes("pro") && tiers.includes("enterprise")
-          ? d.revenue
-          : Math.round(filteredRevenue),
+        revenue: filteredRevenue,
         free: tiers.includes("free") ? d.free : 0,
-        pro: tiers.includes("pro") ? d.pro : 0,
-        enterprise: tiers.includes("enterprise") ? d.enterprise : 0,
+        pro: filteredPro,
+        enterprise: filteredEnt,
       };
     });
 }
 
 export function computeKPIs(data: MonthlyMetric[]) {
+  if (data.length === 0) {
+    return {
+      mrr: 0,
+      mrrChange: 0,
+      totalRevenue: 0,
+      activeUsers: 0,
+      activeUsersChange: 0,
+      totalSignups: 0,
+      avgChurn: 0,
+      churnChange: 0,
+      totalSubscribers: 0,
+    };
+  }
+
   const latest = data[data.length - 1];
   const previous = data.length > 1 ? data[data.length - 2] : null;
 
   const totalRevenue = data.reduce((s, d) => s + d.revenue, 0);
   const totalSignups = data.reduce((s, d) => s + d.signups, 0);
   const avgChurn =
-    data.reduce((s, d) => s + d.churnRate, 0) / (data.length || 1);
+    data.reduce((s, d) => s + d.churnRate, 0) / data.length;
 
   const revenueChange = previous
     ? ((latest.revenue - previous.revenue) / previous.revenue) * 100

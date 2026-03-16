@@ -2,12 +2,14 @@
 
 import {
   ResponsiveContainer,
-  BarChart,
+  ComposedChart,
   Bar,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
+  Legend,
 } from "recharts";
 import type { MonthlyMetric } from "@/lib/data";
 
@@ -17,8 +19,8 @@ interface UserGrowthChartProps {
 
 export default function UserGrowthChart({ data }: UserGrowthChartProps) {
   return (
-    <ResponsiveContainer width="100%" height={260}>
-      <BarChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+    <ResponsiveContainer width="100%" height={280}>
+      <ComposedChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" vertical={false} />
         <XAxis
           dataKey="label"
@@ -40,15 +42,51 @@ export default function UserGrowthChart({ data }: UserGrowthChartProps) {
             fontSize: "12px",
             boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
           }}
-          formatter={(value) => [Number(value).toLocaleString(), "Signups"]}
+          formatter={(value, name) => {
+            const labels: Record<string, string> = {
+              signups: "Signups",
+              churned: "Churned",
+              netNewUsers: "Net New",
+            };
+            return [Number(value).toLocaleString(), labels[name as string] || name];
+          }}
+        />
+        <Legend
+          verticalAlign="top"
+          iconType="circle"
+          iconSize={8}
+          wrapperStyle={{ fontSize: "11px", color: "var(--muted)", paddingBottom: "8px" }}
+          formatter={(value) => {
+            const labels: Record<string, string> = {
+              signups: "Signups",
+              churned: "Churned",
+              netNewUsers: "Net New",
+            };
+            return labels[value] || value;
+          }}
         />
         <Bar
           dataKey="signups"
           fill="var(--chart-2)"
-          radius={[6, 6, 0, 0]}
-          maxBarSize={40}
+          radius={[4, 4, 0, 0]}
+          maxBarSize={28}
         />
-      </BarChart>
+        <Bar
+          dataKey="churned"
+          fill="var(--danger)"
+          radius={[4, 4, 0, 0]}
+          maxBarSize={28}
+          opacity={0.6}
+        />
+        <Line
+          type="monotone"
+          dataKey="netNewUsers"
+          stroke="var(--chart-4)"
+          strokeWidth={2}
+          dot={{ r: 3, fill: "var(--chart-4)", strokeWidth: 2, stroke: "var(--card-bg)" }}
+          activeDot={{ r: 5 }}
+        />
+      </ComposedChart>
     </ResponsiveContainer>
   );
 }

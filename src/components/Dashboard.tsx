@@ -117,16 +117,16 @@ export default function Dashboard() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <ChartCard title="Revenue Trend" subtitle="Monthly recurring revenue" loading={loading}>
+          <ChartCard title="Revenue Trend" subtitle="MRR and ARPU (Pro $29/mo, Enterprise $99/mo)" loading={loading}>
             <RevenueChart data={filteredData} />
           </ChartCard>
-          <ChartCard title="User Growth" subtitle="New signups per month" loading={loading}>
+          <ChartCard title="User Growth" subtitle="Signups vs churned users and net new growth" loading={loading}>
             <UserGrowthChart data={filteredData} />
           </ChartCard>
-          <ChartCard title="Subscription Breakdown" subtitle="Distribution across tiers" loading={loading}>
+          <ChartCard title="Subscription Breakdown" subtitle="Distribution across tiers (latest month)" loading={loading}>
             <SubscriptionChart data={filteredData} activeTiers={activeTiers} />
           </ChartCard>
-          <ChartCard title="Churn Rate" subtitle="Monthly customer churn percentage" loading={loading}>
+          <ChartCard title="Churn Analysis" subtitle="Churn rate with absolute churned user count" loading={loading}>
             <ChurnChart data={filteredData} />
           </ChartCard>
         </div>
