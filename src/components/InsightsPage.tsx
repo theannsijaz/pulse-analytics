@@ -4,12 +4,14 @@ import { useState, useEffect } from "react";
 import Navbar from "./Navbar";
 import ChartCard from "./ChartCard";
 import { insightsData } from "@/lib/insights";
-import TierRevenueChart from "./insights/TierRevenueChart";
-import GrowthRatesChart from "./insights/GrowthRatesChart";
-import ConversionChart from "./insights/ConversionChart";
-import ForecastChart from "./insights/ForecastChart";
-import UnitEconomicsCards from "./insights/UnitEconomicsCards";
-import SummaryTable from "./insights/SummaryTable";
+import {
+  TierRevenueChart,
+  GrowthRatesChart,
+  ConversionChart,
+  ForecastChart,
+  UnitEconomicsCards,
+  SummaryTable,
+} from "./insights";
 
 export default function InsightsPage() {
   const [loading, setLoading] = useState(true);
