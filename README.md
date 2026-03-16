@@ -2,8 +2,6 @@
 
 A professional SaaS metrics dashboard built with Next.js, Recharts, and Tailwind CSS. Features interactive data visualizations, real-time filtering, executive-level insights, and revenue forecasting, all powered by realistic, mathematically interconnected mock data.
 
-**Live Demo:** [Deployed on Vercel](https://pulse-analytics.vercel.app)
-
 ## Features
 
 ### Dashboard (`/`)
