@@ -11,6 +11,7 @@ interface FilterBarProps {
   onStartMonthChange: (month: string) => void;
   onEndMonthChange: (month: string) => void;
   onTierToggle: (tier: TierKey) => void;
+  disabled?: boolean;
 }
 
 export default function FilterBar({
@@ -21,9 +22,10 @@ export default function FilterBar({
   onStartMonthChange,
   onEndMonthChange,
   onTierToggle,
+  disabled = false,
 }: FilterBarProps) {
   return (
-    <div className="bg-[var(--card-bg)] rounded-2xl border border-[var(--card-border)] p-4 shadow-sm">
+    <div className={`bg-[var(--card-bg)] rounded-2xl border border-[var(--card-border)] p-4 shadow-sm transition-opacity duration-300 ${disabled ? "opacity-50 pointer-events-none" : ""}`}>
       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
         <div className="flex items-center gap-2">
           <svg className="w-4 h-4 text-[var(--muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">

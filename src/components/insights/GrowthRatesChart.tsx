@@ -2,33 +2,28 @@
 
 import {
   ResponsiveContainer,
-  ComposedChart,
+  LineChart,
   Line,
-  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   Legend,
+  ReferenceLine,
 } from "recharts";
-import type { MonthlyMetric } from "@/lib/data";
-import EmptyState from "./EmptyState";
+import type { GrowthRate } from "@/lib/insights";
+import EmptyState from "../EmptyState";
 
-interface RevenueChartProps {
-  data: MonthlyMetric[];
+interface GrowthRatesChartProps {
+  data: GrowthRate[];
 }
 
-function formatCurrency(value: number) {
-  if (value >= 1000) return `$${(value / 1000).toFixed(0)}k`;
-  return `$${value}`;
-}
-
-export default function RevenueChart({ data }: RevenueChartProps) {
-  if (!data.length) return <EmptyState message="No revenue data for the selected range." />;
+export default function GrowthRatesChart({ data }: GrowthRatesChartProps) {
+  if (!data.length) return <EmptyState />;
 
   return (
     <ResponsiveContainer width="100%" height={280}>
-      <ComposedChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+      <LineChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" vertical={false} />
         <XAxis
           dataKey="label"
@@ -37,22 +32,13 @@ export default function RevenueChart({ data }: RevenueChartProps) {
           axisLine={{ stroke: "var(--card-border)" }}
         />
         <YAxis
-          yAxisId="revenue"
-          tickFormatter={formatCurrency}
+          tickFormatter={(v) => `${v}%`}
           tick={{ fontSize: 11, fill: "var(--muted)" }}
-          tickLine={false}
-          axisLine={false}
-          width={55}
-        />
-        <YAxis
-          yAxisId="arpu"
-          orientation="right"
-          tickFormatter={(v) => `$${v}`}
-          tick={{ fontSize: 11, fill: "var(--muted-light)" }}
           tickLine={false}
           axisLine={false}
           width={45}
         />
+        <ReferenceLine y={0} stroke="var(--card-border)" strokeDasharray="3 3" />
         <Tooltip
           contentStyle={{
             backgroundColor: "var(--card-bg)",
@@ -62,8 +48,11 @@ export default function RevenueChart({ data }: RevenueChartProps) {
             boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
           }}
           formatter={(value, name) => {
-            if (name === "revenue") return [`$${Number(value).toLocaleString()}`, "MRR"];
-            return [`$${Number(value).toFixed(2)}`, "ARPU"];
+            const labels: Record<string, string> = {
+              revenueGrowth: "Revenue Growth",
+              userGrowth: "User Growth",
+            };
+            return [`${value}%`, labels[name as string] || name];
           }}
         />
         <Legend
@@ -71,36 +60,26 @@ export default function RevenueChart({ data }: RevenueChartProps) {
           iconType="circle"
           iconSize={8}
           wrapperStyle={{ fontSize: "11px", color: "var(--muted)", paddingBottom: "8px" }}
-          formatter={(value) => (value === "revenue" ? "MRR" : "ARPU")}
-        />
-        <Bar
-          yAxisId="revenue"
-          dataKey="revenue"
-          fill="var(--chart-1)"
-          radius={[4, 4, 0, 0]}
-          maxBarSize={32}
-          opacity={0.15}
+          formatter={(value) => (value === "revenueGrowth" ? "Revenue Growth" : "User Growth")}
         />
         <Line
-          yAxisId="revenue"
           type="monotone"
-          dataKey="revenue"
+          dataKey="revenueGrowth"
           stroke="var(--chart-1)"
           strokeWidth={2.5}
           dot={{ r: 3, fill: "var(--chart-1)", strokeWidth: 2, stroke: "var(--card-bg)" }}
-          activeDot={{ r: 5, strokeWidth: 2 }}
+          activeDot={{ r: 5 }}
         />
         <Line
-          yAxisId="arpu"
           type="monotone"
-          dataKey="arpu"
+          dataKey="userGrowth"
           stroke="var(--chart-4)"
           strokeWidth={2}
           strokeDasharray="5 3"
           dot={{ r: 3, fill: "var(--chart-4)", strokeWidth: 2, stroke: "var(--card-bg)" }}
           activeDot={{ r: 5 }}
         />
-      </ComposedChart>
+      </LineChart>
     </ResponsiveContainer>
   );
 }

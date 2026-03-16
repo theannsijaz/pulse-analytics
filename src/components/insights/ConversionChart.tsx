@@ -3,33 +3,33 @@
 import {
   ResponsiveContainer,
   ComposedChart,
-  Area,
   Bar,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   Legend,
 } from "recharts";
-import type { MonthlyMetric } from "@/lib/data";
-import EmptyState from "./EmptyState";
+import EmptyState from "../EmptyState";
 
-interface ChurnChartProps {
-  data: MonthlyMetric[];
+interface ConversionPoint {
+  label: string;
+  conversionRate: number;
+  paidUsers: number;
+  freeUsers: number;
 }
 
-export default function ChurnChart({ data }: ChurnChartProps) {
-  if (!data.length) return <EmptyState message="No churn data for the selected range." />;
+interface ConversionChartProps {
+  data: ConversionPoint[];
+}
+
+export default function ConversionChart({ data }: ConversionChartProps) {
+  if (!data.length) return <EmptyState />;
 
   return (
     <ResponsiveContainer width="100%" height={280}>
       <ComposedChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-        <defs>
-          <linearGradient id="churnGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="var(--chart-5)" stopOpacity={0.2} />
-            <stop offset="95%" stopColor="var(--chart-5)" stopOpacity={0} />
-          </linearGradient>
-        </defs>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" vertical={false} />
         <XAxis
           dataKey="label"
@@ -43,16 +43,15 @@ export default function ChurnChart({ data }: ChurnChartProps) {
           tick={{ fontSize: 11, fill: "var(--muted)" }}
           tickLine={false}
           axisLine={false}
-          width={40}
-          domain={[0, "auto"]}
+          width={45}
         />
         <YAxis
-          yAxisId="count"
+          yAxisId="users"
           orientation="right"
           tick={{ fontSize: 11, fill: "var(--muted-light)" }}
           tickLine={false}
           axisLine={false}
-          width={40}
+          width={50}
         />
         <Tooltip
           contentStyle={{
@@ -63,8 +62,9 @@ export default function ChurnChart({ data }: ChurnChartProps) {
             boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
           }}
           formatter={(value, name) => {
-            if (name === "churnRate") return [`${value}%`, "Churn Rate"];
-            return [Number(value).toLocaleString(), "Churned Users"];
+            if (name === "conversionRate") return [`${value}%`, "Conversion Rate"];
+            if (name === "paidUsers") return [Number(value).toLocaleString(), "Paid Users"];
+            return [Number(value).toLocaleString(), "Free Users"];
           }}
         />
         <Legend
@@ -72,24 +72,38 @@ export default function ChurnChart({ data }: ChurnChartProps) {
           iconType="circle"
           iconSize={8}
           wrapperStyle={{ fontSize: "11px", color: "var(--muted)", paddingBottom: "8px" }}
-          formatter={(value) => (value === "churnRate" ? "Churn Rate" : "Churned Users")}
+          formatter={(value) => {
+            const labels: Record<string, string> = {
+              conversionRate: "Conversion Rate",
+              paidUsers: "Paid Users",
+              freeUsers: "Free Users",
+            };
+            return labels[value] || value;
+          }}
         />
         <Bar
-          yAxisId="count"
-          dataKey="churned"
-          fill="var(--danger)"
+          yAxisId="users"
+          dataKey="paidUsers"
+          fill="var(--chart-1)"
           radius={[4, 4, 0, 0]}
-          maxBarSize={28}
-          opacity={0.25}
+          maxBarSize={24}
+          opacity={0.7}
         />
-        <Area
+        <Bar
+          yAxisId="users"
+          dataKey="freeUsers"
+          fill="var(--chart-2)"
+          radius={[4, 4, 0, 0]}
+          maxBarSize={24}
+          opacity={0.3}
+        />
+        <Line
           yAxisId="rate"
           type="monotone"
-          dataKey="churnRate"
-          stroke="var(--chart-5)"
+          dataKey="conversionRate"
+          stroke="var(--chart-4)"
           strokeWidth={2.5}
-          fill="url(#churnGradient)"
-          dot={{ r: 3, fill: "var(--chart-5)", strokeWidth: 2, stroke: "var(--card-bg)" }}
+          dot={{ r: 3, fill: "var(--chart-4)", strokeWidth: 2, stroke: "var(--card-bg)" }}
           activeDot={{ r: 5 }}
         />
       </ComposedChart>

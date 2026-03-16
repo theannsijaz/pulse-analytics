@@ -12,12 +12,15 @@ import {
   Legend,
 } from "recharts";
 import type { MonthlyMetric } from "@/lib/data";
+import EmptyState from "./EmptyState";
 
 interface UserGrowthChartProps {
   data: MonthlyMetric[];
 }
 
 export default function UserGrowthChart({ data }: UserGrowthChartProps) {
+  if (!data.length) return <EmptyState message="No user growth data for the selected range." />;
+
   return (
     <ResponsiveContainer width="100%" height={280}>
       <ComposedChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>

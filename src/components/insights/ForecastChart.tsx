@@ -4,18 +4,19 @@ import {
   ResponsiveContainer,
   ComposedChart,
   Line,
-  Bar,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   Legend,
+  ReferenceLine,
 } from "recharts";
-import type { MonthlyMetric } from "@/lib/data";
-import EmptyState from "./EmptyState";
+import type { ForecastPoint } from "@/lib/insights";
+import EmptyState from "../EmptyState";
 
-interface RevenueChartProps {
-  data: MonthlyMetric[];
+interface ForecastChartProps {
+  data: ForecastPoint[];
 }
 
 function formatCurrency(value: number) {
@@ -23,12 +24,25 @@ function formatCurrency(value: number) {
   return `$${value}`;
 }
 
-export default function RevenueChart({ data }: RevenueChartProps) {
-  if (!data.length) return <EmptyState message="No revenue data for the selected range." />;
+export default function ForecastChart({ data }: ForecastChartProps) {
+  if (!data.length) return <EmptyState />;
+
+  const lastHistorical = data.filter((d) => !d.projected).pop();
+  const chartData = data.map((d) => ({
+    ...d,
+    actual: d.projected ? undefined : d.revenue,
+    forecast: d.projected || d.month === lastHistorical?.month ? d.revenue : undefined,
+  }));
 
   return (
     <ResponsiveContainer width="100%" height={280}>
-      <ComposedChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+      <ComposedChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+        <defs>
+          <linearGradient id="forecastGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor="var(--chart-4)" stopOpacity={0.15} />
+            <stop offset="95%" stopColor="var(--chart-4)" stopOpacity={0} />
+          </linearGradient>
+        </defs>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" vertical={false} />
         <XAxis
           dataKey="label"
@@ -37,22 +51,20 @@ export default function RevenueChart({ data }: RevenueChartProps) {
           axisLine={{ stroke: "var(--card-border)" }}
         />
         <YAxis
-          yAxisId="revenue"
           tickFormatter={formatCurrency}
           tick={{ fontSize: 11, fill: "var(--muted)" }}
           tickLine={false}
           axisLine={false}
           width={55}
         />
-        <YAxis
-          yAxisId="arpu"
-          orientation="right"
-          tickFormatter={(v) => `$${v}`}
-          tick={{ fontSize: 11, fill: "var(--muted-light)" }}
-          tickLine={false}
-          axisLine={false}
-          width={45}
-        />
+        {lastHistorical && (
+          <ReferenceLine
+            x={lastHistorical.label}
+            stroke="var(--muted-light)"
+            strokeDasharray="3 3"
+            label={{ value: "Today", fill: "var(--muted)", fontSize: 10, position: "top" }}
+          />
+        )}
         <Tooltip
           contentStyle={{
             backgroundColor: "var(--card-bg)",
@@ -62,8 +74,9 @@ export default function RevenueChart({ data }: RevenueChartProps) {
             boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
           }}
           formatter={(value, name) => {
-            if (name === "revenue") return [`$${Number(value).toLocaleString()}`, "MRR"];
-            return [`$${Number(value).toFixed(2)}`, "ARPU"];
+            if (value === undefined) return ["", ""];
+            const label = name === "actual" ? "Actual MRR" : "Projected MRR";
+            return [`$${Number(value).toLocaleString()}`, label];
           }}
         />
         <Legend
@@ -71,34 +84,25 @@ export default function RevenueChart({ data }: RevenueChartProps) {
           iconType="circle"
           iconSize={8}
           wrapperStyle={{ fontSize: "11px", color: "var(--muted)", paddingBottom: "8px" }}
-          formatter={(value) => (value === "revenue" ? "MRR" : "ARPU")}
-        />
-        <Bar
-          yAxisId="revenue"
-          dataKey="revenue"
-          fill="var(--chart-1)"
-          radius={[4, 4, 0, 0]}
-          maxBarSize={32}
-          opacity={0.15}
+          formatter={(value) => (value === "actual" ? "Actual" : "Forecast")}
         />
         <Line
-          yAxisId="revenue"
           type="monotone"
-          dataKey="revenue"
+          dataKey="actual"
           stroke="var(--chart-1)"
           strokeWidth={2.5}
           dot={{ r: 3, fill: "var(--chart-1)", strokeWidth: 2, stroke: "var(--card-bg)" }}
-          activeDot={{ r: 5, strokeWidth: 2 }}
+          connectNulls={false}
         />
-        <Line
-          yAxisId="arpu"
+        <Area
           type="monotone"
-          dataKey="arpu"
+          dataKey="forecast"
           stroke="var(--chart-4)"
           strokeWidth={2}
-          strokeDasharray="5 3"
+          strokeDasharray="6 3"
+          fill="url(#forecastGrad)"
           dot={{ r: 3, fill: "var(--chart-4)", strokeWidth: 2, stroke: "var(--card-bg)" }}
-          activeDot={{ r: 5 }}
+          connectNulls={false}
         />
       </ComposedChart>
     </ResponsiveContainer>

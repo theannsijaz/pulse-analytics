@@ -10,6 +10,7 @@ import {
 } from "recharts";
 import type { MonthlyMetric, TierKey } from "@/lib/data";
 import { TIER_COLORS } from "@/lib/data";
+import EmptyState from "./EmptyState";
 
 interface SubscriptionChartProps {
   data: MonthlyMetric[];
@@ -18,7 +19,7 @@ interface SubscriptionChartProps {
 
 export default function SubscriptionChart({ data, activeTiers }: SubscriptionChartProps) {
   const latest = data[data.length - 1];
-  if (!latest) return null;
+  if (!latest) return <EmptyState message="No subscription data for the selected range." />;
 
   const pieData = activeTiers.map((tier) => ({
     name: tier.charAt(0).toUpperCase() + tier.slice(1),
